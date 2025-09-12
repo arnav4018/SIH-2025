@@ -1,0 +1,33 @@
+# Agri-AI Dashboard Requirements
+# Core dependencies for the Streamlit agricultural monitoring application
+
+# Web framework for the dashboard
+streamlit>=1.28.0
+
+# MATLAB Engine API for Python
+# Note: This requires MATLAB to be installed on the system
+# Installation: pip install matlabengine
+# Alternative for systems without MATLAB license:
+# matlabengine>=9.14.0
+
+# Numerical computing and data manipulation
+numpy>=1.24.0
+
+# Data visualization and plotting (optional, for enhanced charts)
+matplotlib>=3.7.0
+plotly>=5.15.0
+
+# Additional utilities for data handling
+pandas>=2.0.0
+
+# Image processing (for health map visualization)
+pillow>=9.5.0
+
+# Optional: For enhanced dashboard features
+altair>=5.0.0  # Alternative plotting library for Streamlit
+scipy>=1.11.0  # Scientific computing utilities
+
+# Development and testing dependencies (optional)
+pytest>=7.4.0
+black>=23.0.0  # Code formatting
+flake8>=6.0.0  # Code linting
