@@ -1,0 +1,42 @@
+# Streamlit Configuration for Agri-AI Dashboard
+# SIH 2025 Project Configuration
+
+[global]
+# Set to true for development, false for production
+developmentMode = false
+
+# Show warning when there are potential memory issues
+showWarningOnDirectExecution = false
+
+[server]
+# Server configuration
+port = 8501
+enableCORS = true
+enableXsrfProtection = true
+
+# Max upload size (for future image upload features)
+maxUploadSize = 200
+
+# Session timeout
+headless = false
+
+[browser]
+# Browser configuration for auto-opening
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
+
+[theme]
+# Agricultural theme colors
+primaryColor = "#2E8B57"  # SeaGreen
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F8FF"  # AliceBlue
+textColor = "#262730"
+
+# Optional: Set font family
+font = "sans serif"
+
+[logger]
+# Logging configuration
+level = "info"
+messageFormat = "%(asctime)s %(message)s"
