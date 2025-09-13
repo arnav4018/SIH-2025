@@ -37,39 +37,59 @@ function [health_map, alert_message, stats] = run_main_analysis_final()
         
         display_sensor_summary(sensor_data);
         
-        % ===== STEP 2: CALL ARYAN'S AI IMAGE ANALYSIS =====
+        % ===== STEP 2: CALL NEW AI IMAGE ANALYSIS =====
         fprintf('[Step 2/5] Running AI image analysis...\n');
         
-        % For production: Use actual image path from sensor data or config
-        % For now: Use placeholder path - Aryan will update this
-        image_path = 'data/latest_field_image.jpg'; % Placeholder
+        % Initialize AI integration layer
+        ai = ai_integration_layer();
         
-        if exist(image_path, 'file')
-            image_result = analyze_image(image_path);
-            fprintf('Image analysis completed: %s\n', image_result.status);
-        else
-            fprintf('No field image available, using image analysis stub\n');
-            image_result = call_image_analysis_stub();
+        % Try to find actual field image, otherwise generate synthetic data
+        image_paths = {'data/latest_field_image.jpg', 'data/field_image.jpg', 'latest_field_image.jpg'};
+        image_found = false;
+        for i = 1:length(image_paths)
+            if exist(image_paths{i}, 'file')
+                fprintf('   Found field image: %s\n', image_paths{i});
+                [ai_health_map, image_result] = ai.call_analyze_image(image_paths{i});
+                image_found = true;
+                break;
+            end
         end
         
-        % ===== STEP 3: CALL ARYAN'S AI STRESS PREDICTION =====
+        if ~image_found
+            fprintf('   No field image available, generating synthetic hyperspectral data\n');
+            [ai_health_map, image_result] = ai.call_analyze_image([128, 128]);
+        end
+        
+        fprintf('   Image analysis completed: %s\n', image_result.status);
+        
+        % ===== STEP 3: CALL NEW AI STRESS PREDICTION =====
         fprintf('[Step 3/5] Running AI stress prediction...\n');
         
-        stress_result = predict_stress(sensor_data);
-        fprintf('Stress prediction completed: %s\n', stress_result.status);
+        [sensor_prediction, stress_result] = ai.call_predict_stress(sensor_data);
+        fprintf('   Stress prediction completed: %s\n', stress_result.status);
         
-        % ===== STEP 4: AI FUSION AND HEALTH MAP GENERATION =====
-        fprintf('[Step 4/5] Performing AI fusion and generating health map...\n');
+        % ===== STEP 4: HEALTH MAP PROCESSING =====
+        fprintf('[Step 4/5] Processing AI health map and fusion metrics...\n');
         
-        [health_map, fusion_metrics] = generate_ai_fusion_health_map(sensor_data, image_result, stress_result);
+        % Convert AI health map to legacy format for backwards compatibility
+        health_map = ai.convert_health_map_to_legacy(ai_health_map);
         
-        % ===== STEP 5: INTELLIGENT ALERT GENERATION =====
-        fprintf('[Step 5/5] Generating intelligent alerts...\n');
+        % Calculate fusion metrics
+        fusion_metrics = calculate_ai_fusion_metrics(sensor_data, image_result, stress_result, ai_health_map);
         
-        alert_message = generate_intelligent_alert(sensor_data, image_result, stress_result, fusion_metrics);
+        % ===== STEP 5: NEW AI FUSION ALERT GENERATION =====
+        fprintf('[Step 5/5] Generating intelligent alerts using AI fusion...\n');
+        
+        % Create current stats for the new alert function
+        current_stats = ai.create_current_stats(sensor_data, ai_health_map);
+        
+        % Call the new AI fusion alert function
+        alert_message = ai.call_generate_alert(ai_health_map, sensor_prediction, current_stats);
+        
+        fprintf('   Alert generated using AI fusion logic\n');
         
         % ===== COMPILE COMPREHENSIVE STATISTICS =====
-        stats = compile_comprehensive_stats(sensor_data, image_result, stress_result, fusion_metrics, health_map);
+        stats = compile_comprehensive_stats_ai(sensor_data, image_result, stress_result, fusion_metrics, health_map, ai_health_map, sensor_prediction);
         
         fprintf('\n=== ANALYSIS COMPLETE ===\n');
         fprintf('Health Map: %.1f%% healthy areas detected\n', stats.healthy_areas_percent);
@@ -499,4 +519,289 @@ function [health_map, alert_message, stats] = run_main_analysis_stub_fallback()
     stats.critical_areas_count = sum(health_map(:) < 0.3);
     stats.ai_confidence = 0.3; % Low confidence in fallback mode
     stats.data_quality_score = 0.5;
+end
+
+function fusion_metrics = calculate_ai_fusion_metrics(sensor_data, image_result, stress_result, ai_health_map)
+    %CALCULATE_AI_FUSION_METRICS Calculate metrics for new AI integration
+    
+    fusion_metrics = struct();
+    
+    % Calculate contribution weights based on AI model performance
+    if strcmp(image_result.status, 'success')
+        image_weight = 0.5; % High weight for successful AI image analysis
+    elseif strcmp(image_result.status, 'fallback')
+        image_weight = 0.2; % Lower weight for fallback
+    else
+        image_weight = 0.1; % Minimal weight for failed analysis
+    end
+    
+    if strcmp(stress_result.status, 'success')
+        stress_weight = 0.3; % Good weight for successful prediction
+    elseif strcmp(stress_result.status, 'fallback')
+        stress_weight = 0.15; % Lower weight for fallback
+    else
+        stress_weight = 0.05; % Minimal weight for failed prediction
+    end
+    
+    sensor_weight = 1.0 - image_weight - stress_weight;
+    sensor_weight = max(0.2, sensor_weight); % Ensure minimum sensor contribution
+    
+    % Normalize weights
+    total_weight = sensor_weight + image_weight + stress_weight;
+    fusion_metrics.sensor_contribution = sensor_weight / total_weight;
+    fusion_metrics.image_contribution = image_weight / total_weight;
+    fusion_metrics.stress_contribution = stress_weight / total_weight;
+    
+    % Calculate overall confidence
+    confidence_factors = [];
+    
+    if isfield(sensor_data, 'data_quality')
+        confidence_factors(end+1) = sensor_data.data_quality;
+    else
+        confidence_factors(end+1) = 0.8; % Default sensor confidence
+    end
+    
+    if isfield(image_result, 'confidence')
+        confidence_factors(end+1) = image_result.confidence;
+    end
+    
+    if isfield(stress_result, 'confidence')
+        confidence_factors(end+1) = stress_result.confidence;
+    end
+    
+    fusion_metrics.overall_confidence = mean(confidence_factors);
+    
+    % Calculate spatial statistics from AI health map
+    if ~isempty(ai_health_map)
+        fusion_metrics.spatial_variance = var(double(ai_health_map(:)));
+        fusion_metrics.problem_areas_detected = sum(ai_health_map(:) > 1); % Stressed or waterlogged
+        fusion_metrics.healthy_fraction = mean(ai_health_map(:) == 1);
+    else
+        fusion_metrics.spatial_variance = 0;
+        fusion_metrics.problem_areas_detected = 0;
+        fusion_metrics.healthy_fraction = 0.5;
+    end
+end
+
+function stats = compile_comprehensive_stats_ai(sensor_data, image_result, stress_result, fusion_metrics, health_map, ai_health_map, sensor_prediction)
+    %COMPILE_COMPREHENSIVE_STATS_AI Enhanced statistics with AI integration
+    
+    stats = struct();
+    
+    % Current sensor readings
+    stats.temperature = get_safe_sensor_value(sensor_data, 'temperature', 25.0);
+    stats.humidity = get_safe_sensor_value(sensor_data, 'humidity', 60.0);
+    stats.soil_moisture = get_safe_sensor_value(sensor_data, 'soil_moisture', 50.0);
+    stats.ph = get_safe_sensor_value(sensor_data, 'ph', 7.0);
+    if isfield(sensor_data, 'light_intensity')
+        stats.light_intensity = sensor_data.light_intensity;
+    else
+        stats.light_intensity = 800; % Default value
+    end
+    
+    % AI predictions from LSTM model
+    if isstruct(sensor_prediction)
+        stats.predicted_temperature = get_prediction_value(sensor_prediction, 'temperature', stats.temperature);
+        stats.predicted_humidity = get_prediction_value(sensor_prediction, 'humidity', stats.humidity);
+        stats.predicted_soil_moisture = get_prediction_value(sensor_prediction, 'soil_moisture', stats.soil_moisture);
+        
+        % Extract confidence and trends
+        stats.prediction_confidence = get_prediction_value(sensor_prediction, 'confidence', 0.7);
+        stats.moisture_trend = get_prediction_value(sensor_prediction, 'soil_moisture_trend', 0);
+        stats.temperature_trend = get_prediction_value(sensor_prediction, 'temperature_trend', 0);
+    else
+        stats.predicted_temperature = stats.temperature;
+        stats.predicted_humidity = stats.humidity;
+        stats.predicted_soil_moisture = stats.soil_moisture;
+        stats.prediction_confidence = 0.5;
+        stats.moisture_trend = 0;
+        stats.temperature_trend = 0;
+    end
+    
+    % Health map statistics (legacy format)
+    stats.overall_health_score = mean(health_map(:));
+    stats.critical_areas_count = sum(health_map(:) < 0.3);
+    stats.healthy_areas_percent = 100 * sum(health_map(:) > 0.7) / numel(health_map);
+    stats.health_variance = var(health_map(:));
+    
+    % AI health map statistics (new categorical format)
+    if ~isempty(ai_health_map)
+        total_pixels = numel(ai_health_map);
+        stats.ai_healthy_pct = 100 * sum(ai_health_map(:) == 1) / total_pixels;
+        stats.ai_stressed_pct = 100 * sum(ai_health_map(:) == 2) / total_pixels;
+        stats.ai_waterlogged_pct = 100 * sum(ai_health_map(:) == 3) / total_pixels;
+    else
+        stats.ai_healthy_pct = 70;
+        stats.ai_stressed_pct = 20;
+        stats.ai_waterlogged_pct = 10;
+    end
+    
+    % AI model performance metrics
+    stats.ai_confidence = fusion_metrics.overall_confidence;
+    stats.sensor_weight = fusion_metrics.sensor_contribution;
+    stats.image_weight = fusion_metrics.image_contribution;
+    stats.stress_weight = fusion_metrics.stress_contribution;
+    
+    % Image analysis results (enhanced)
+    if strcmp(image_result.status, 'success') || strcmp(image_result.status, 'fallback')
+        stats.vegetation_index = get_safe_field_value(image_result, 'vegetation_index', 0.6);
+        stats.disease_detected = get_safe_field_value(image_result, 'disease_detected', false);
+        stats.anomaly_count = get_safe_field_value(image_result, 'anomaly_count', 0);
+        stats.image_analysis_status = image_result.status;
+    else
+        stats.vegetation_index = 0.5;
+        stats.disease_detected = false;
+        stats.anomaly_count = 0;
+        stats.image_analysis_status = 'failed';
+    end
+    
+    % Stress prediction results (enhanced)
+    if isfield(stress_result, 'stress_level')
+        stats.stress_level = stress_result.stress_level;
+        stats.stress_score = get_safe_field_value(stress_result, 'stress_score', 0.5);
+        stats.yield_impact = get_safe_field_value(stress_result, 'yield_impact', 0.1);
+        stats.stress_analysis_status = stress_result.status;
+    else
+        stats.stress_level = 'Unknown';
+        stats.stress_score = 0.5;
+        stats.yield_impact = 0.1;
+        stats.stress_analysis_status = 'failed';
+    end
+    
+    % Data quality and metadata
+    stats.data_quality_score = get_safe_sensor_value(sensor_data, 'data_quality', 0.8);
+    stats.analysis_timestamp = datestr(now, 'yyyy-mm-dd HH:MM:SS');
+    stats.data_source = 'ai_integrated_analysis';
+    stats.version = 'final_v2.0_ai_integrated';
+    
+    % Determine alert level based on AI analysis
+    alert_level = determine_alert_level_ai(stats, ai_health_map);
+    stats.alert_level = alert_level;
+    
+    % Location information
+    if isfield(sensor_data, 'latitude') && isfield(sensor_data, 'longitude')
+        stats.field_latitude = sensor_data.latitude;
+        stats.field_longitude = sensor_data.longitude;
+    else
+        stats.field_latitude = 40.7128; % Default NYC coordinates
+        stats.field_longitude = -74.0060;
+    end
+    
+    % Historical trend simulation (in production, load from database)
+    stats.sensor_history_temp = stats.temperature + 2 * randn(1, 10);
+    stats.sensor_history_humidity = stats.humidity + 5 * randn(1, 10);
+    stats.health_trend = stats.overall_health_score + 0.1 * randn(1, 10);
+    
+    % Ensure all numeric fields are finite
+    stats = ensure_finite_values(stats);
+end
+
+function value = get_safe_sensor_value(sensor_data, field_name, default_value)
+    %GET_SAFE_SENSOR_VALUE Safely extract sensor value with fallback
+    if isfield(sensor_data, field_name) && ~isnan(sensor_data.(field_name))
+        value = sensor_data.(field_name);
+    else
+        value = default_value;
+    end
+end
+
+function value = get_safe_field_value(struct_data, field_name, default_value)
+    %GET_SAFE_FIELD_VALUE Safely extract struct field with fallback
+    if isfield(struct_data, field_name)
+        value = struct_data.(field_name);
+        if isnumeric(value) && ~isfinite(value)
+            value = default_value;
+        end
+    else
+        value = default_value;
+    end
+end
+
+function value = get_prediction_value(prediction, field_name, default_value)
+    %GET_PREDICTION_VALUE Safely extract prediction value
+    if isfield(prediction, field_name)
+        value = prediction.(field_name);
+        if isnumeric(value) && ~isfinite(value)
+            value = default_value;
+        end
+    else
+        value = default_value;
+    end
+end
+
+function alert_level = determine_alert_level_ai(stats, ai_health_map)
+    %DETERMINE_ALERT_LEVEL_AI Determine alert level using AI analysis
+    
+    % Start with INFO level
+    alert_level = 'INFO';
+    
+    % Check AI health map conditions
+    if ~isempty(ai_health_map)
+        stressed_pct = stats.ai_stressed_pct;
+        waterlogged_pct = stats.ai_waterlogged_pct;
+        
+        if waterlogged_pct > 20 || stressed_pct > 40
+            alert_level = 'CRITICAL';
+        elseif waterlogged_pct > 10 || stressed_pct > 25
+            alert_level = 'WARNING';
+        elseif waterlogged_pct > 5 || stressed_pct > 15
+            alert_level = 'CAUTION';
+        end
+    end
+    
+    % Check sensor-based conditions
+    if stats.soil_moisture < 25
+        alert_level = escalate_alert_level(alert_level, 'CRITICAL');
+    elseif stats.soil_moisture < 35
+        alert_level = escalate_alert_level(alert_level, 'WARNING');
+    end
+    
+    if stats.temperature > 40 || stats.temperature < 5
+        alert_level = escalate_alert_level(alert_level, 'CRITICAL');
+    elseif stats.temperature > 35 || stats.temperature < 10
+        alert_level = escalate_alert_level(alert_level, 'WARNING');
+    end
+    
+    % Check prediction-based conditions
+    if stats.predicted_soil_moisture < 30
+        alert_level = escalate_alert_level(alert_level, 'WARNING');
+    end
+    
+    if stats.prediction_confidence < 0.4
+        alert_level = escalate_alert_level(alert_level, 'CAUTION');
+    end
+end
+
+function new_level = escalate_alert_level(current_level, requested_level)
+    %ESCALATE_ALERT_LEVEL Escalate alert level based on severity
+    
+    levels = {'INFO', 'CAUTION', 'WARNING', 'CRITICAL'};
+    current_idx = find(strcmp(current_level, levels));
+    requested_idx = find(strcmp(requested_level, levels));
+    
+    if isempty(current_idx), current_idx = 1; end
+    if isempty(requested_idx), requested_idx = 1; end
+    
+    final_idx = max(current_idx, requested_idx);
+    new_level = levels{final_idx};
+end
+
+function stats = ensure_finite_values(stats)
+    %ENSURE_FINITE_VALUES Replace NaN/Inf values with safe defaults
+    
+    numeric_fields = fieldnames(stats);
+    for i = 1:length(numeric_fields)
+        field = numeric_fields{i};
+        value = stats.(field);
+        if isnumeric(value)
+            if isscalar(value) && ~isfinite(value)
+                stats.(field) = 0; % Replace scalar NaN/Inf
+            elseif ~isscalar(value)
+                finite_mask = isfinite(value);
+                if ~all(finite_mask)
+                    stats.(field)(~finite_mask) = 0; % Replace array NaN/Inf elements
+                end
+            end
+        end
+    end
 end
