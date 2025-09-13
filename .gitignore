@@ -33,6 +33,13 @@
 ehthumbs.db
 Thumbs.db
 
+# Windows shortcuts
+*.lnk
+
+# Browser downloads (incomplete downloads)
+*.crdownload
+*.tmp
+
 # Arduino/IoT specific
 *.ino.bak
 *.hex
