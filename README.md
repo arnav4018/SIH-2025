@@ -71,46 +71,55 @@ Our Smart Agriculture Monitoring System leverages cutting-edge **IoT sensors**, 
 
 ---
 
-## 🏗️ **System Architecture**
+## 🏗️ **System Architecture - Enhanced React Integration**
 
 ```mermaid
 graph TB
     subgraph "Field Layer"
-        IoT[📡 IoT Sensors<br/>Temperature, Humidity<br/>Soil Moisture, pH<br/>Light Intensity]
-        Drone[🚁 Hyperspectral<br/>Imaging<br/>(Future)]
+        IoT[📡 IoT Sensors<br/>ESP32 Devices<br/>Multi-sensor Arrays]
+        Drone[🚁 Hyperspectral<br/>Imaging<br/>MATLAB Analysis]
     end
     
-    subgraph "Communication Layer" 
-        MQTT[📶 MQTT Broker<br/>Real-time Data<br/>Transmission]
-        WiFi[📡 WiFi Network<br/>Device Connectivity]
+    subgraph "Communication Layer"
+        MQTT[📶 MQTT Broker<br/>Real-time Streaming<br/>Device Management]
+        Forwarder[🔄 MQTT Forwarder<br/>Python Bridge<br/>Data Validation]
+    end
+    
+    subgraph "API Layer - NEW"
+        API[🌐 FastAPI Server<br/>RESTful Endpoints<br/>WebSocket Support]
+        WS[⚡ WebSocket Hub<br/>Real-time Updates<br/>Event Broadcasting]
     end
     
     subgraph "Processing Layer"
-        Backend[🔧 MATLAB Backend<br/>Data Integration<br/>Analysis Orchestration]
-        AI[🧠 AI/ML Models<br/>CNN: Image Analysis<br/>LSTM: Predictions]
-        Data[📊 Data Pipeline<br/>ETL Processing<br/>Quality Assurance]
+        MATLAB[🧮 MATLAB Engine<br/>API-Integrated Analysis<br/>Enhanced Algorithms]
+        AI[🧠 AI/ML Models<br/>CNN + LSTM<br/>Predictive Analytics]
+        Data[📊 Data Pipeline<br/>Quality Assurance<br/>Historical Storage]
     end
     
-    subgraph "Interface Layer"
-        Dashboard[💻 Streamlit Dashboard<br/>Real-time Monitoring<br/>Analytics & Alerts]
-        Mobile[📱 Mobile Interface<br/>(Future Enhancement)]
+    subgraph "Frontend Layer - UPGRADED"
+        React[⚛️ React Dashboard<br/>TypeScript + MUI<br/>Real-time Charts]
+        Streamlit[📊 Streamlit Dashboard<br/>Legacy Support<br/>Comparison Interface]
     end
     
     subgraph "User Layer"
-        Farmer[👨‍🌾 Farmers<br/>Crop Monitoring<br/>Decision Making]
-        Expert[👨‍🔬 Agronomists<br/>Data Analysis<br/>Recommendations]
+        Farmer[👨‍🌾 Modern Interface<br/>Real-time Monitoring<br/>Mobile Responsive]
+        Expert[👨‍🔬 Advanced Analytics<br/>Detailed Insights<br/>Export Capabilities]
     end
     
     IoT --> MQTT
-    Drone --> WiFi
-    MQTT --> Backend
-    WiFi --> Backend
-    Backend --> AI
-    Backend --> Data
-    AI --> Dashboard
-    Data --> Dashboard
-    Dashboard --> Farmer
-    Dashboard --> Expert
+    Drone --> MATLAB
+    MQTT --> Forwarder
+    Forwarder --> API
+    API --> WS
+    MATLAB --> API
+    AI --> MATLAB
+    Data --> API
+    API --> React
+    WS --> React
+    API --> Streamlit
+    React --> Farmer
+    React --> Expert
+    Streamlit --> Expert
 ```
 
 ---
@@ -125,8 +134,34 @@ SIH-2025/                                    # 🏠 Project Root
 ├── ⚙️ requirements.txt                     # Python dependencies
 ├── 🚀 start_dashboard.bat                  # Quick launch script
 │
-├── 💻 frontend/                            # Frontend Development
-│   ├── 📖 README.md                       # Frontend team guide (Arnav & Radhika)
+├── ⚛️ frontend-react/                     # Modern React Frontend (NEW)
+│   ├── 📖 README.md                       # React setup and development guide
+│   ├── 📦 package.json                    # Dependencies and build scripts
+│   ├── 🔧 tsconfig.json                   # TypeScript configuration
+│   ├── 🌐 public/                         # Static assets and HTML template
+│   └── 📁 src/                            # React application source
+│       ├── 📱 App.tsx                     # Main application component
+│       ├── 📄 index.tsx                   # Application entry point
+│       ├── 🧩 components/                 # Reusable UI components
+│       │   ├── Layout.tsx                 # Navigation and layout
+│       │   └── MetricCard.tsx             # Sensor data display cards
+│       ├── 📊 pages/                      # Application pages
+│       │   └── Dashboard.tsx              # Main dashboard page
+│       ├── 🔗 contexts/                   # React context providers
+│       │   └── WebSocketContext.tsx       # Real-time data management
+│       ├── 🌐 services/                   # API integration
+│       │   └── api.ts                     # HTTP client and API calls
+│       └── 📝 types/                      # TypeScript definitions
+│           └── index.ts                   # Application interfaces
+│
+├── 🌐 api/                                # Backend API Server (NEW)
+│   ├── 🚀 app.py                          # FastAPI application
+│   ├── 📦 requirements.txt                # Python dependencies
+│   ├── 🔄 mqtt_data_forwarder.py          # MQTT to API bridge
+│   └── 📋 API_SPEC.md → ../API_SPEC.md   # API documentation
+│
+├── 💻 frontend/                            # Legacy Streamlit Frontend
+│   ├── 📖 README.md                       # Streamlit development guide
 │   ├── 🎨 assets/                         # Design & Presentation Materials  
 │   │   ├── 📖 README.md                   # Design system guide (Radhika)
 │   │   ├── 🎨 branding/                   # Logos, colors, typography
@@ -143,7 +178,8 @@ SIH-2025/                                    # 🏠 Project Root
 │   ├── 📖 README.md                       # Backend integration guide (Suryansh)
 │   ├── 🎯 run_main_analysis.m             # Core analysis orchestration
 │   ├── 🔄 run_main_analysis_enhanced.m    # Enhanced with real data
-│   ├── 📡 run_main_analysis_iot.m         # IoT-integrated version (LATEST)
+│   ├── 📡 run_main_analysis_iot.m         # IoT-integrated version
+│   ├── 🌐 run_main_analysis_api_integrated.m # API-integrated version (LATEST)
 │   ├── 🔗 ai_integration_layer.m          # AI model interfaces
 │   ├── 📶 mqtt_listener.m                 # MQTT data reception
 │   ├── 🧪 test_backend.m                  # Backend testing suite
@@ -195,21 +231,35 @@ SIH-2025/                                    # 🏠 Project Root
 
 ### **🎯 For Judges & Evaluators**
 
-#### **Option 1: Instant Demo (Recommended)**
+#### **Option 1: Modern React Dashboard (Recommended)**
 ```bash
-# Clone and launch in under 2 minutes
+# Clone and launch the new React frontend
 git clone <repository-url>
 cd SIH-2025
 
-# Quick launch (Windows)
-start_dashboard.bat
+# Start the API server
+cd api
+pip install -r requirements.txt
+python app.py
 
-# OR manual launch
+# In a new terminal, start React frontend
+cd frontend-react
+npm install
+npm start
+```
+
+🌐 **API Server**: http://localhost:8000  
+⚛️ **React Dashboard**: http://localhost:3000  
+🎠 **Features**: Real-time WebSocket updates, modern UI, mobile-responsive
+
+#### **Option 2: Legacy Streamlit Dashboard**
+```bash
+# Traditional Streamlit interface
 streamlit run frontend/app_integrated.py
 ```
 
-📍 **Access**: http://localhost:8501  
-🎪 **Demo Features**: Live sensor data, AI predictions, hyperspectral analysis
+📊 **Streamlit Dashboard**: http://localhost:8501  
+🎠 **Features**: MATLAB integration, basic real-time updates
 
 #### **Option 2: Full System Testing**
 ```bash
@@ -260,18 +310,34 @@ git push origin [your-name]/[feature-name]
 
 ### **🎭 Available Dashboards**
 
-| Dashboard | Purpose | Launch Command | Features |
-|-----------|---------|----------------|----------|
-| **Basic** | Initial prototype | `streamlit run frontend/app.py` | Simple UI, basic charts |
-| **Enhanced** | Advanced features | `streamlit run frontend/app_enhanced.py` | Real-time updates, advanced analytics |
-| **Integrated** 🌟 | Full system | `streamlit run frontend/app_integrated.py` | AI integration, IoT data, alerts |
+| Dashboard | Technology | Launch Command | Features |
+|-----------|------------|----------------|----------|
+| **React Dashboard** 🌟 | React + TypeScript | `npm start` (in frontend-react/) | Modern UI, real-time WebSocket, mobile-responsive |
+| **Streamlit Integrated** | Python | `streamlit run frontend/app_integrated.py` | MATLAB integration, IoT data, alerts |
+| **Streamlit Enhanced** | Python | `streamlit run frontend/app_enhanced.py` | Real-time updates, advanced analytics |
+| **Streamlit Basic** | Python | `streamlit run frontend/app.py` | Simple UI, basic charts |
 
 ---
 
 ## 🛠️ **Technology Stack**
 
+### **⚛️ React Frontend (Primary)**
+- **React 18**: Modern frontend framework with hooks
+- **TypeScript**: Type-safe development and better IDE support
+- **Material-UI (MUI)**: Professional React component library
+- **Recharts**: Data visualization and charting
+- **React Query**: Server state management and caching
+- **Socket.IO**: Real-time WebSocket communication
+- **Axios**: HTTP client for API integration
+
+### **🌐 API Layer (FastAPI)**
+- **FastAPI**: High-performance Python web framework
+- **WebSockets**: Real-time bidirectional communication
+- **Pydantic**: Data validation and serialization
+- **Uvicorn**: ASGI server for production deployment
+
 ### **🐍 Python Ecosystem**
-- **Streamlit**: Interactive web dashboard framework
+- **Streamlit**: Legacy dashboard framework (maintained)
 - **Pandas & NumPy**: Data manipulation and numerical computing
 - **Matplotlib & Plotly**: Advanced data visualization
 - **Scikit-learn**: Machine learning preprocessing
