@@ -199,7 +199,8 @@ with st.sidebar:
                 import matlab.engine
                 progress_bar.progress(25, "Starting MATLAB Engine...")
                 
-                st.session_state.matlab_engine = matlab.engine.start_matlab()
+                # Start MATLAB in headless mode for better performance
+                st.session_state.matlab_engine = matlab.engine.start_matlab('-nojvm')
                 progress_bar.progress(50, "Adding paths...")
                 
                 # Add paths
@@ -280,11 +281,11 @@ else:
                     else:
                         function_name = "run_main_analysis"
                     
-                    # Call MATLAB function with 3 outputs
-                    health_map, alert_message, stats = st.session_state.matlab_engine.eval(
-                        f"[health_map, alert_message, stats] = {function_name}();",
-                        nargout=3
-                    )
+                    # Call MATLAB function with 3 outputs using proper API
+                    if function_name == "run_main_analysis_final":
+                        health_map, alert_message, stats = st.session_state.matlab_engine.run_main_analysis_final(nargout=3)
+                    else:
+                        health_map, alert_message, stats = st.session_state.matlab_engine.run_main_analysis(nargout=3)
                     
                     # Store results
                     st.session_state.health_map = np.asarray(health_map)
