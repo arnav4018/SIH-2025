@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import io, { Socket } from 'socket.io-client';
+// Using native WebSocket instead of socket.io-client
 import toast from 'react-hot-toast';
 import { WebSocketMessage, SensorReading, Alert } from '../types';
 
@@ -36,70 +36,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
-
-  const connectWebSocket = useCallback(() => {
-    const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
-    
-    setConnectionStatus('connecting');
-    
-    try {
-      const socket = new WebSocket(wsUrl);
-      socketRef.current = socket;
-
-      socket.onopen = () => {
-        console.log('WebSocket connected');
-        setIsConnected(true);
-        setConnectionStatus('connected');
-        reconnectAttemptsRef.current = 0;
-        
-        // Send ping to test connection
-        socket.send(JSON.stringify({ type: 'ping', timestamp: new Date().toISOString() }));
-        
-        toast.success('Real-time connection established');
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const message: WebSocketMessage = JSON.parse(event.data);
-          setLastMessage(message);
-          handleWebSocketMessage(message);
-        } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
-        }
-      };
-
-      socket.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
-        setIsConnected(false);
-        setConnectionStatus('disconnected');
-        socketRef.current = null;
-
-        // Attempt to reconnect if not a manual close
-        if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-          console.log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`);
-          
-          reconnectTimeoutRef.current = setTimeout(() => {
-            reconnectAttemptsRef.current += 1;
-            connectWebSocket();
-          }, delay);
-        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-          setConnectionStatus('error');
-          toast.error('Failed to establish real-time connection after multiple attempts');
-        }
-      };
-
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnectionStatus('error');
-        toast.error('Real-time connection error');
-      };
-
-    } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
-      setConnectionStatus('error');
-    }
-  }, []);
 
   const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
     switch (message.type) {
@@ -188,6 +124,70 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         console.log('Unknown WebSocket message type:', message.type);
     }
   }, []);
+
+  const connectWebSocket = useCallback(() => {
+    const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+    
+    setConnectionStatus('connecting');
+    
+    try {
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+
+      socket.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+        setConnectionStatus('connected');
+        reconnectAttemptsRef.current = 0;
+        
+        // Send ping to test connection
+        socket.send(JSON.stringify({ type: 'ping', timestamp: new Date().toISOString() }));
+        
+        toast.success('Real-time connection established');
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const message: WebSocketMessage = JSON.parse(event.data);
+          setLastMessage(message);
+          handleWebSocketMessage(message);
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error);
+        }
+      };
+
+      socket.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason);
+        setIsConnected(false);
+        setConnectionStatus('disconnected');
+        socketRef.current = null;
+
+        // Attempt to reconnect if not a manual close
+        if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+          console.log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1})`);
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectAttemptsRef.current += 1;
+            connectWebSocket();
+          }, delay);
+        } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+          setConnectionStatus('error');
+          toast.error('Failed to establish real-time connection after multiple attempts');
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setConnectionStatus('error');
+        toast.error('Real-time connection error');
+      };
+
+    } catch (error) {
+      console.error('Failed to create WebSocket connection:', error);
+      setConnectionStatus('error');
+    }
+  }, [handleWebSocketMessage]);
 
   const sendMessage = useCallback((message: any) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {

@@ -237,20 +237,20 @@ SIH-2025/                                    # 🏠 Project Root
 git clone <repository-url>
 cd SIH-2025
 
-# Start the API server
+# Start the API server (Terminal 1)
 cd api
 pip install -r requirements.txt
 python app.py
 
-# In a new terminal, start React frontend
+# In a new terminal, start React frontend (Terminal 2)
 cd frontend-react
 npm install
 npm start
 ```
 
 🌐 **API Server**: http://localhost:8000  
-⚛️ **React Dashboard**: http://localhost:3000  
-🎠 **Features**: Real-time WebSocket updates, modern UI, mobile-responsive
+⚛️ **React Dashboard**: http://localhost:3002 🎆  
+🎠 **Features**: Real-time WebSocket updates, TypeScript, Material-UI, mobile-responsive
 
 #### **Option 2: Legacy Streamlit Dashboard**
 ```bash
@@ -310,12 +310,12 @@ git push origin [your-name]/[feature-name]
 
 ### **🎭 Available Dashboards**
 
-| Dashboard | Technology | Launch Command | Features |
-|-----------|------------|----------------|----------|
-| **React Dashboard** 🌟 | React + TypeScript | `npm start` (in frontend-react/) | Modern UI, real-time WebSocket, mobile-responsive |
-| **Streamlit Integrated** | Python | `streamlit run frontend/app_integrated.py` | MATLAB integration, IoT data, alerts |
-| **Streamlit Enhanced** | Python | `streamlit run frontend/app_enhanced.py` | Real-time updates, advanced analytics |
-| **Streamlit Basic** | Python | `streamlit run frontend/app.py` | Simple UI, basic charts |
+| Dashboard | Technology | Launch Command | Port | Features |
+|-----------|------------|----------------|------|----------|
+| **React Dashboard** 🌟 | React + TypeScript + MUI | `npm start` (in frontend-react/) | 3002 | Modern UI, real-time WebSocket, Material-UI, mobile-responsive |
+| **Streamlit Integrated** | Python + Streamlit | `streamlit run frontend/app_integrated.py` | 8501 | MATLAB integration, IoT data, alerts |
+| **Streamlit Enhanced** | Python + Streamlit | `streamlit run frontend/app_enhanced.py` | 8502 | Real-time updates, advanced analytics |
+| **Streamlit Basic** | Python + Streamlit | `streamlit run frontend/app.py` | 8503 | Simple UI, basic charts |
 
 ---
 
@@ -369,7 +369,7 @@ git push origin [your-name]/[feature-name]
 
 | Component | Status | Description | Responsible |
 |-----------|--------|-------------|--------------|
-| 🎨 **Frontend Dashboard** | ✅ Complete | Interactive Streamlit interface with real-time monitoring | Arnav & Radhika |
+| 🎨 **Frontend Dashboard** | ✅ Complete | Modern React + TypeScript dashboard with real-time monitoring | Arnav & Radhika |
 | 🧠 **AI Models** | ✅ Operational | CNN image analysis + LSTM prediction models | Aryan |
 | 📊 **Data Pipeline** | ✅ Ready | ETL processing with quality assurance | Neha |
 | 🔧 **Backend Integration** | ✅ Functional | MATLAB orchestration with IoT integration | Suryansh |

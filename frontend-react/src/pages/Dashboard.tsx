@@ -5,8 +5,6 @@ import {
   Typography,
   Box,
   Button,
-  Card,
-  CardContent,
   Alert,
   AlertTitle,
   Chip,
@@ -23,9 +21,9 @@ import {
   Refresh as RefreshIcon,
   PlayArrow as PlayIcon,
 } from '@mui/icons-material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+// Using native JavaScript Date formatting instead of date-fns
 import toast from 'react-hot-toast';
 
 import MetricCard from '../components/MetricCard';
@@ -108,7 +106,7 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
   // Prepare chart data
   const chartData = historicalData?.data?.map(point => ({
-    time: format(new Date(point.timestamp), 'HH:mm'),
+    time: new Date(point.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     temperature: point.temperature,
     humidity: point.humidity,
     soil_moisture: point.soil_moisture,
@@ -352,7 +350,12 @@ const Dashboard: React.FC<DashboardProps> = () => {
                     Last Updated
                   </Typography>
                   <Typography variant="body2">
-                    {format(new Date(analysisResults.timestamp), 'MMM dd, HH:mm')}
+                    {new Date(analysisResults.timestamp).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </Typography>
                 </Box>
               </Box>
@@ -394,7 +397,11 @@ const Dashboard: React.FC<DashboardProps> = () => {
                       />
                     </Box>
                     <Typography variant="body2" color="textSecondary">
-                      Last update: {format(new Date(device.timestamp), 'HH:mm:ss')}
+                      Last update: {new Date(device.timestamp).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
                     </Typography>
                   </Box>
                 ))}

@@ -189,7 +189,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         {trend && (
           <Box display="flex" alignItems="center" gap={1}>
             <Chip
-              icon={getTrendIcon()}
+              icon={getTrendIcon() || undefined}
               label={`${trend.percentage > 0 ? '+' : ''}${trend.percentage.toFixed(1)}%`}
               size="small"
               color={getTrendColor() as any}
