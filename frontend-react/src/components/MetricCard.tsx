@@ -30,33 +30,38 @@ const MetricCard: React.FC<MetricCardProps> = ({
     switch (status) {
       case 'excellent':
         return {
-          bg: theme.palette.success.light,
+          bg: 'rgba(16, 185, 129, 0.08)',
           text: theme.palette.success.dark,
           border: theme.palette.success.main,
+          accent: theme.palette.success.main,
         };
       case 'good':
         return {
-          bg: theme.palette.info.light,
+          bg: 'rgba(59, 130, 246, 0.08)',
           text: theme.palette.info.dark,
           border: theme.palette.info.main,
+          accent: theme.palette.info.main,
         };
       case 'warning':
         return {
-          bg: theme.palette.warning.light,
+          bg: 'rgba(245, 158, 11, 0.08)',
           text: theme.palette.warning.dark,
           border: theme.palette.warning.main,
+          accent: theme.palette.warning.main,
         };
       case 'critical':
         return {
-          bg: theme.palette.error.light,
+          bg: 'rgba(239, 68, 68, 0.08)',
           text: theme.palette.error.dark,
           border: theme.palette.error.main,
+          accent: theme.palette.error.main,
         };
       default:
         return {
-          bg: theme.palette.grey[100],
-          text: theme.palette.grey[800],
+          bg: 'rgba(107, 114, 128, 0.08)',
+          text: theme.palette.text.primary,
           border: theme.palette.grey[400],
+          accent: theme.palette.grey[400],
         };
     }
   };
@@ -122,29 +127,45 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <Card
+      elevation={0}
       sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'all 0.3s ease-in-out',
-        borderLeft: `4px solid ${colors.border}`,
+        borderRadius: 4,
+        border: '1px solid',
+        borderColor: 'grey.200',
         backgroundColor: colors.bg,
+        position: 'relative',
+        overflow: 'visible',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
-          boxShadow: theme.shadows[8],
-          transform: 'translateY(-2px)',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          transform: 'translateY(-4px)',
+          borderColor: colors.accent,
+        },
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: 4,
+          backgroundColor: colors.accent,
+          borderRadius: '16px 16px 0 0',
         },
       }}
     >
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
           <Typography
-            variant="subtitle2"
-            color="textSecondary"
+            variant="body2"
             sx={{
               fontSize: '0.875rem',
               fontWeight: 500,
+              color: 'text.secondary',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px',
+              letterSpacing: '0.05em',
             }}
           >
             {title}
@@ -152,10 +173,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
           {icon && (
             <Box
               sx={{
-                color: colors.text,
-                opacity: 0.7,
+                color: colors.accent,
                 display: 'flex',
                 alignItems: 'center',
+                '& > *': {
+                  fontSize: '1.5rem'
+                }
               }}
             >
               {icon}
@@ -163,60 +186,63 @@ const MetricCard: React.FC<MetricCardProps> = ({
           )}
         </Box>
 
-        <Box display="flex" alignItems="baseline" gap={1} mb={1}>
+        <Box display="flex" alignItems="baseline" gap={0.5} mb={2}>
           <Typography
-            variant="h4"
+            variant="h3"
             component="div"
             sx={{
               fontWeight: 700,
-              color: colors.text,
+              color: 'text.primary',
               lineHeight: 1,
+              fontSize: '2.5rem'
             }}
           >
             {typeof value === 'number' ? value.toFixed(1) : value}
           </Typography>
           {unit && (
             <Typography
-              variant="body2"
-              color="textSecondary"
-              sx={{ fontWeight: 500 }}
+              variant="h6"
+              sx={{ 
+                fontWeight: 500,
+                color: 'text.secondary',
+                fontSize: '1rem'
+              }}
             >
               {unit}
             </Typography>
           )}
         </Box>
 
-        {trend && (
-          <Box display="flex" alignItems="center" gap={1}>
-            <Chip
-              icon={getTrendIcon() || undefined}
-              label={`${trend.percentage > 0 ? '+' : ''}${trend.percentage.toFixed(1)}%`}
-              size="small"
-              color={getTrendColor() as any}
-              variant="outlined"
-              sx={{
-                fontSize: '0.75rem',
-                height: 24,
-                '& .MuiChip-label': {
-                  px: 1,
-                },
-              }}
-            />
-          </Box>
-        )}
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          {trend && (
+            <Box display="flex" alignItems="center" gap={0.5}>
+              {getTrendIcon()}
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: trend.direction === 'up' ? 'success.main' : 
+                         trend.direction === 'down' ? 'error.main' : 'text.secondary'
+                }}
+              >
+                {trend.percentage > 0 ? '+' : ''}{trend.percentage.toFixed(1)}%
+              </Typography>
+            </Box>
+          )}
 
-        {/* Status indicator */}
-        <Box mt={2}>
           <Chip
             label={status.charAt(0).toUpperCase() + status.slice(1)}
             size="small"
             sx={{
-              backgroundColor: colors.border,
+              backgroundColor: colors.accent,
               color: 'white',
               fontSize: '0.75rem',
-              height: 20,
+              fontWeight: 500,
+              height: 24,
+              borderRadius: 2,
               '& .MuiChip-label': {
-                px: 1,
+                px: 1.5,
               },
             }}
           />

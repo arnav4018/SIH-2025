@@ -10,6 +10,12 @@ import {
   Chip,
   Skeleton,
   Fab,
+  AppBar,
+  Toolbar,
+  Container,
+  IconButton,
+  Badge,
+  Tooltip,
 } from '@mui/material';
 import {
   Thermostat as ThermostatIcon,
@@ -20,8 +26,13 @@ import {
   Battery90 as BatteryIcon,
   Refresh as RefreshIcon,
   PlayArrow as PlayIcon,
+  Home as HomeIcon,
+  Notifications as NotificationsIcon,
+  WifiOff as WifiOffIcon,
+  Wifi as WifiIcon,
+  Agriculture as AgricultureIcon,
 } from '@mui/icons-material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // Using native JavaScript Date formatting instead of date-fns
 import toast from 'react-hot-toast';
@@ -36,9 +47,11 @@ import {
   getSystemStatus 
 } from '../services/api';
 import { DashboardProps, AnalysisRequest } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC<DashboardProps> = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { latestSensorData, isConnected, alerts } = useWebSocket();
   const [analysisRunning, setAnalysisRunning] = useState(false);
 
@@ -135,53 +148,196 @@ const Dashboard: React.FC<DashboardProps> = () => {
   };
 
   return (
-    <Box className="fade-in">
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1" fontWeight="bold">
-          🌾 Agricultural Dashboard
-        </Typography>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#fafafa' }}>
+      {/* Navigation Header */}
+      <AppBar 
+        position="static" 
+        elevation={0}
+        sx={{ 
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+          color: '#1a1a1a'
+        }}
+      >
+        <Toolbar sx={{ py: 1 }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              cursor: 'pointer',
+              mr: 4
+            }}
+            onClick={() => navigate('/')}
+          >
+            <AgricultureIcon sx={{ 
+              color: '#2E7D32', 
+              mr: 1.5, 
+              fontSize: '1.75rem' 
+            }} />
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: '#1a1a1a', 
+                fontWeight: 600,
+                fontSize: '1.1rem',
+                fontFamily: '"Inter", sans-serif'
+              }}
+            >
+              AgroBotics
+            </Typography>
+          </Box>
+          
+          <Typography variant="h6" sx={{ flexGrow: 1, color: '#666' }}>
+            Dashboard
+          </Typography>
+
+          <Box display="flex" alignItems="center" gap={2}>
+            {/* Connection Status */}
+            <Tooltip title={isConnected ? 'Real-time Connected' : 'Disconnected'}>
+              <Chip
+                icon={isConnected ? <WifiIcon /> : <WifiOffIcon />}
+                label={isConnected ? 'Live' : 'Offline'}
+                color={isConnected ? 'success' : 'default'}
+                size="small"
+                variant={isConnected ? 'filled' : 'outlined'}
+              />
+            </Tooltip>
+
+            {/* System Status */}
+            {systemStatus && (
+              <Chip
+                label={`${systemStatus.connected_devices} devices`}
+                size="small"
+                variant="outlined"
+                sx={{ color: '#666' }}
+              />
+            )}
+
+            {/* Alerts */}
+            <Tooltip title={`${alerts.length} active alerts`}>
+              <IconButton sx={{ color: '#666' }}>
+                <Badge badgeContent={alerts.length} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+
+            {/* Home Button */}
+            <Tooltip title="Back to Home">
+              <IconButton 
+                onClick={() => navigate('/')}
+                sx={{ 
+                  color: '#666',
+                  '&:hover': {
+                    color: '#2E7D32',
+                    backgroundColor: 'rgba(46, 125, 50, 0.04)'
+                  }
+                }}
+              >
+                <HomeIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        {/* Dashboard Header */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 6,
+          p: 4,
+          background: 'linear-gradient(135deg, rgba(46, 125, 50, 0.05), rgba(76, 175, 80, 0.05))',
+          borderRadius: 4,
+          border: '1px solid',
+          borderColor: 'rgba(46, 125, 50, 0.2)',
+          backgroundColor: 'white'
+        }}>
+        <Box>
+          <Typography variant="h3" component="h1" fontWeight={600} gutterBottom>
+            Dashboard
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Control and monitor your autonomous robotic farming fleet
+          </Typography>
+        </Box>
         <Box display="flex" gap={2} alignItems="center">
           {systemStatus && (
             <Chip
-              label={`${systemStatus.connected_devices} devices connected`}
-              color="primary"
+              label={`${systemStatus.connected_devices} devices active`}
+              color="secondary"
               variant="outlined"
+              sx={{ 
+                backgroundColor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'secondary.main'
+              }}
             />
           )}
           <Button
             variant="contained"
+            color="secondary"
             startIcon={<PlayIcon />}
             onClick={handleRunAnalysis}
             disabled={analysisRunning || !systemStatus?.matlab_engine_status}
+            sx={{ 
+              px: 3,
+              py: 1.5,
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 500
+            }}
           >
-            Run Analysis
+            {analysisRunning ? 'Analyzing...' : 'Run Analysis'}
           </Button>
         </Box>
       </Box>
 
       {/* Connection Status Alert */}
       {!isConnected && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
-          <AlertTitle>Real-time connection unavailable</AlertTitle>
+        <Alert 
+          severity="warning" 
+          sx={{ 
+            mb: 4,
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'warning.light',
+            '& .MuiAlert-icon': {
+              color: 'warning.main'
+            }
+          }}
+        >
+          <AlertTitle sx={{ fontWeight: 600 }}>Real-time connection unavailable</AlertTitle>
           Using cached data. Some features may be limited.
         </Alert>
       )}
 
       {/* Alerts Section */}
       {alerts.length > 0 && (
-        <Box mb={3}>
-          <Typography variant="h6" gutterBottom>
-            🚨 Active Alerts
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+            Active Alerts
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={3}>
             {alerts.slice(0, 3).map((alert) => (
               <Grid item xs={12} md={4} key={alert.alert_id}>
                 <Alert 
                   severity={alert.severity === 'critical' ? 'error' : alert.severity as any}
-                  variant="filled"
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 3,
+                    backgroundColor: 'background.paper',
+                    '& .MuiAlert-icon': {
+                      alignItems: 'center'
+                    }
+                  }}
                 >
-                  <AlertTitle>{alert.severity.toUpperCase()}</AlertTitle>
+                  <AlertTitle sx={{ fontWeight: 600, textTransform: 'capitalize' }}>
+                    {alert.severity} Alert
+                  </AlertTitle>
                   {alert.message}
                 </Alert>
               </Grid>
@@ -191,7 +347,10 @@ const Dashboard: React.FC<DashboardProps> = () => {
       )}
 
       {/* Metrics Cards */}
-      <Grid container spacing={3} mb={4}>
+      <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+        Environmental Metrics
+      </Typography>
+      <Grid container spacing={3} sx={{ mb: 6 }}>
         <Grid item xs={12} sm={6} md={2}>
           <MetricCard
             title="Temperature"
@@ -257,46 +416,74 @@ const Dashboard: React.FC<DashboardProps> = () => {
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         {/* Environmental Trends Chart */}
         <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" gutterBottom>
-              📈 Environmental Trends (Last 24h)
+          <Paper elevation={0} sx={{ 
+            p: 4, 
+            height: 450,
+            borderRadius: 4,
+            border: '1px solid',
+            borderColor: 'grey.200'
+          }}>
+            <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+              Environmental Trends (24h)
             </Typography>
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={360}>
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="2 2" stroke="#F3F4F6" />
+                  <XAxis 
+                    dataKey="time" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                  />
+                  <RechartsTooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
                   <Line 
                     type="monotone" 
                     dataKey="temperature" 
-                    stroke="#FF6B6B" 
+                    stroke="#EF4444" 
                     strokeWidth={3}
+                    dot={{ fill: '#EF4444', strokeWidth: 0, r: 4 }}
+                    activeDot={{ r: 6, fill: '#EF4444' }}
                     name="Temperature (°C)"
                   />
                   <Line 
                     type="monotone" 
                     dataKey="humidity" 
-                    stroke="#4ECDC4" 
+                    stroke="#3B82F6" 
                     strokeWidth={3}
+                    dot={{ fill: '#3B82F6', strokeWidth: 0, r: 4 }}
+                    activeDot={{ r: 6, fill: '#3B82F6' }}
                     name="Humidity (%)"
                   />
                   <Line 
                     type="monotone" 
                     dataKey="soil_moisture" 
-                    stroke="#45B7D1" 
+                    stroke="#10B981" 
                     strokeWidth={3}
+                    dot={{ fill: '#10B981', strokeWidth: 0, r: 4 }}
+                    activeDot={{ r: 6, fill: '#10B981' }}
                     name="Soil Moisture (%)"
                   />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <Box display="flex" justifyContent="center" alignItems="center" height={320}>
-                <Typography variant="body1" color="textSecondary">
+              <Box display="flex" justifyContent="center" alignItems="center" height={360}>
+                <Typography variant="body1" color="text.secondary">
                   Loading historical data...
                 </Typography>
               </Box>
@@ -306,9 +493,16 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
         {/* Analysis Results */}
         <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" gutterBottom>
-              🧠 AI Analysis Results
+          <Paper elevation={0} sx={{ 
+            p: 4, 
+            height: 450,
+            borderRadius: 4,
+            border: '1px solid',
+            borderColor: 'grey.200',
+            background: 'linear-gradient(135deg, rgba(139, 90, 60, 0.02), rgba(107, 114, 128, 0.02))'
+          }}>
+            <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+              AI Analysis
             </Typography>
             {analysisLoading ? (
               <Box>
@@ -378,25 +572,41 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
         {/* Device Status */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              📡 Device Status
+          <Paper elevation={0} sx={{ 
+            p: 4,
+            borderRadius: 4,
+            border: '1px solid',
+            borderColor: 'grey.200'
+          }}>
+            <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+              Device Status
             </Typography>
             {currentData.length > 0 ? (
               <Box>
                 {currentData.map((device, index) => (
-                  <Box key={device.device_id} mb={2}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle1" fontWeight="bold">
+                  <Box key={device.device_id} sx={{ 
+                    mb: 3,
+                    p: 3,
+                    borderRadius: 3,
+                    backgroundColor: 'grey.50',
+                    border: '1px solid',
+                    borderColor: 'grey.200'
+                  }}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                      <Typography variant="h6" fontWeight={600}>
                         {device.device_id}
                       </Typography>
                       <Chip
-                        label="Online"
+                        label="Active"
                         color="success"
                         size="small"
+                        sx={{ 
+                          borderRadius: 2,
+                          fontWeight: 500
+                        }}
                       />
                     </Box>
-                    <Typography variant="body2" color="textSecondary">
+                    <Typography variant="body2" color="text.secondary">
                       Last update: {new Date(device.timestamp).toLocaleTimeString('en-US', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -416,37 +626,62 @@ const Dashboard: React.FC<DashboardProps> = () => {
 
         {/* System Information */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              ⚙️ System Information
+          <Paper elevation={0} sx={{ 
+            p: 4,
+            borderRadius: 4,
+            border: '1px solid',
+            borderColor: 'grey.200'
+          }}>
+            <Typography variant="h5" fontWeight={600} gutterBottom sx={{ mb: 3 }}>
+              System Information
             </Typography>
             {systemStatus ? (
-              <Box>
-                <Box mb={2}>
-                  <Typography variant="subtitle2" color="textSecondary">
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ 
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'success.light'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     System Status
                   </Typography>
                   <Chip
                     label={systemStatus.status}
                     color="success"
                     size="small"
+                    sx={{ borderRadius: 2, fontWeight: 500 }}
                   />
                 </Box>
-                <Box mb={2}>
-                  <Typography variant="subtitle2" color="textSecondary">
+                <Box sx={{ 
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: systemStatus.matlab_engine_status === 'ready' ? 'success.light' : 'error.light'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     MATLAB Engine
                   </Typography>
                   <Chip
                     label={systemStatus.matlab_engine_status}
                     color={systemStatus.matlab_engine_status === 'ready' ? 'success' : 'error'}
                     size="small"
+                    sx={{ borderRadius: 2, fontWeight: 500 }}
                   />
                 </Box>
-                <Box mb={2}>
-                  <Typography variant="subtitle2" color="textSecondary">
+                <Box sx={{ 
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'grey.300'
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     Uptime
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="h6" fontWeight={600}>
                     {Math.floor(systemStatus.uptime_seconds / 3600)}h {Math.floor((systemStatus.uptime_seconds % 3600) / 60)}m
                   </Typography>
                 </Box>
@@ -460,18 +695,28 @@ const Dashboard: React.FC<DashboardProps> = () => {
         </Grid>
       </Grid>
 
-      {/* Floating Action Button for Refresh */}
-      <Fab
-        color="primary"
-        aria-label="refresh"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={() => {
-          queryClient.invalidateQueries();
-          toast.success('Data refreshed');
-        }}
-      >
-        <RefreshIcon />
-      </Fab>
+        {/* Floating Action Button for Refresh */}
+        <Fab
+          color="secondary"
+          aria-label="refresh"
+          sx={{ 
+            position: 'fixed', 
+            bottom: 24, 
+            right: 24,
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            '&:hover': {
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              transform: 'translateY(-2px)'
+            }
+          }}
+          onClick={() => {
+            queryClient.invalidateQueries();
+            toast.success('Data refreshed');
+          }}
+        >
+          <RefreshIcon />
+        </Fab>
+      </Container>
     </Box>
   );
 };

@@ -18,13 +18,13 @@ import {
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
-  Sensors as SensorsIcon,
-  Analytics as AnalyticsIcon,
   Notifications as NotificationsIcon,
   Settings as SettingsIcon,
   WifiOff as WifiOffIcon,
   Wifi as WifiIcon,
   Circle as CircleIcon,
+  Info as InfoIcon,
+  BusinessCenter as BusinessCenterIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useWebSocket } from '../contexts/WebSocketContext';
@@ -53,8 +53,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-    { text: 'Sensors', icon: <SensorsIcon />, path: '/sensors' },
-    { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+    { text: 'About', icon: <InfoIcon />, path: '/about' },
+    { text: 'Services', icon: <BusinessCenterIcon />, path: '/services' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
   ];
 
@@ -89,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Toolbar>
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="h6" color="primary" fontWeight="bold">
-            🌾 AgriTech
+            🤖 AgroBotics
           </Typography>
         </Box>
       </Toolbar>
@@ -130,7 +130,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </IconButton>
           
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Agricultural Monitoring Dashboard
+            Autonomous Agricultural Robotics
           </Typography>
 
           <Box display="flex" alignItems="center" gap={2}>
